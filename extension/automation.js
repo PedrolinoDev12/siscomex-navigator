@@ -265,12 +265,33 @@
 
       log(`🖱️ Passando mouse na aba: ${parentLabel}`, parent);
       await hoverEl(parent);
+      const anchor = parent.matches?.("a, button") ? parent : parent.querySelector?.("a, button, [role='tab'], [role='menuitem']");
+      if (anchor && anchor !== parent) {
+        await hoverEl(anchor);
+      }
       await sleep(700);
 
       let child = await waitFor(childTexts, waitChild);
       if (child) {
         log("✅ Submenu apareceu via hover");
         return child;
+      }
+
+      const submenu = parent.querySelector?.("ul, [role='menu'], .submenu, .dropdown-menu");
+      if (submenu) {
+        try {
+          submenu.style.display = "block";
+          submenu.style.visibility = "visible";
+          submenu.style.opacity = "1";
+          submenu.hidden = false;
+          submenu.setAttribute("aria-hidden", "false");
+        } catch (e) {}
+        await sleep(250);
+        child = await waitFor(childTexts, 1800);
+        if (child) {
+          log("✅ Submenu apareceu forçando visibilidade");
+          return child;
+        }
       }
 
       log("Submenu não apareceu com hover; tentando clique na aba...");
